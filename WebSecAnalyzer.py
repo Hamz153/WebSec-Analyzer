@@ -6,7 +6,7 @@ import dns.resolver
 import whois
 import requests
 from requests.exceptions import RequestException as ReqExc, ConnectionError as ConnErr, Timeout as TimeoutErr
-from urllib.parse import urljoin, urlparse, urlunparse # Import urlunparse for is_alive fix
+from urllib.parse import urljoin, urlparse, urlunparse
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from bs4 import BeautifulSoup
@@ -20,12 +20,17 @@ import random
 import matplotlib.pyplot as plt
 import argparse
 import sys
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import pyfiglet
 from termcolor import colored
 import subprocess
+from tqdm import tqdm
+import shutil
+
+# Version information
+__version__ = "1.1.0"
 
 # Directory setup
 dir_path = r"output"
@@ -35,9 +40,7 @@ os.makedirs(dir_path, exist_ok=True)
 dir_path = r"raw"
 os.makedirs(dir_path, exist_ok=True)
 
-# Global variables and constants
-c = datetime.now()
-print(f"Starting time is {c}")
+# Global constants
 wordlist_sub_default = "wordlist/sub.txt"
 wordlist_file_default = "wordlist/files.txt"
 wordlist_dic_default = "wordlist/dic.txt"
@@ -74,8 +77,8 @@ def get_ip_from_domain(domain):
 
 def print_heading():
     """Prints a standardized heading for tabular output."""
-    print(f"{'Path':<60} {'Status Code':<15} {'Content Length':<15} {'Word Count':<10} {'Char Count':<10} {'Message':<15}")
-    print("=" * 135)
+    tqdm.write(f"{'Path':<60} {'Status Code':<15} {'Content Length':<15} {'Word Count':<10} {'Char Count':<10} {'Message':<15}")
+    tqdm.write("=" * 135)
 
 
 def validate_wordlist(wordlist_path):
@@ -105,6 +108,13 @@ def normalize_url(target_url_in):
         final_url += "#" + parsed_url.fragment
     return final_url
 
+def check_dependency(tool_name):
+    """Checks if a command-line tool is installed."""
+    if shutil.which(tool_name) is None:
+        print(colored(f"[!] Warning: '{tool_name}' is not installed or not in PATH.", "yellow"))
+        return False
+    return True
+
 def make_requester(auth_session=None):
     """
     Returns the appropriate requester (session or requests module).
@@ -123,37 +133,6 @@ def make_requester(auth_session=None):
         session.headers.update({'User-Agent': get_random_user_agent()})
         return session
 
-def domain_to_url(target_domain_or_url, auth_session=None):
-    """
-    Validates and normalizes a domain or URL by making a request.
-    This is kept for initial validation of domain/URL to determine base,
-    but `is_alive` will now determine the canonical working URL/scheme.
-    """
-    parsed_url = urlparse(target_domain_or_url)
-    target_url = target_domain_or_url
-    if not parsed_url.scheme:
-        target_url = "https://" + target_domain_or_url # Default to HTTPS for initial check
-
-    requester = make_requester(auth_session)
-
-    try:
-        response = requester.get(target_url, timeout=10, allow_redirects=True, verify=False)
-        final_url_after_redirects = response.url
-        if 200 <= response.status_code < 300:
-            print(colored(f"[+] Initial URL validation: {final_url_after_redirects} (Status: {response.status_code})", "green"))
-            return final_url_after_redirects, True
-        else:
-            print(colored(f"[-] Initial URL validation: {target_url} exists but returned status: {response.status_code}", "yellow"))
-            return target_url, False
-    except ConnErr:
-        print(colored(f"[-] Initial URL validation: Connection Error for {target_url}", "red"))
-        return target_url, False
-    except TimeoutErr:
-        print(colored(f"[-] Initial URL validation: Request Timeout for {target_url}", "red"))
-        return target_url, False
-    except ReqExc as e:
-        print(colored(f"[-] Initial URL validation: Request Exception for {target_url}: {e}", "red"))
-        return target_url, False
 
 
 def extract_domain(url_or_domain):
@@ -518,7 +497,7 @@ def whois_lookup(domain_to_check):
     try:
         w = whois.whois(domain_to_check)
         if w and w.text:
-            whois_data = f"\n--- WHOIS Data for {domain_to_check} (Timestamp: {c}) ---\n{w.text}"
+            whois_data = f"\n--- WHOIS Data for {domain_to_check} (Timestamp: {datetime.now()}) ---\n{w.text}"
             append_to_file(filename, whois_data)
             append_to_file(file_out, whois_data)
             print(colored(f"    WHOIS data saved to {filename} and {file_out}", "blue"))
@@ -671,10 +650,10 @@ def _process_single_url(url_item, requester, file_200, file_403, output_summary_
         else:
             msg_display = status_msg
 
-        print(f"{url_item:<60} {response.status_code:<15} {content_length:<15} {word_count:<10} {char_count:<10} {msg_display:<15}")
+        tqdm.write(f"{url_item:<60} {response.status_code:<15} {content_length:<15} {word_count:<10} {char_count:<10} {msg_display:<15}")
 
     except ReqExc:
-        print(f"{url_item:<60} {'N/A':<15} {'N/A':<15} {'N/A':<10} {'N/A':<10} {'Connection Error':<15}")
+        tqdm.write(f"{url_item:<60} {'N/A':<15} {'N/A':<15} {'N/A':<10} {'N/A':<10} {'Connection Error':<15}")
     finally: # Add small random delay after each request to mitigate rate-limiting
         time.sleep(random.uniform(0.1, 0.5))
 
@@ -708,7 +687,7 @@ def subdomain_bruteforce(base_domain, wordlist_path, auth_session=None, max_work
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # map() returns results in the order the tasks were submitted
-        executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check)
+        list(tqdm(executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check), total=len(urls_to_check), desc="Subdomains", leave=False))
 
 def enumerate_paths_generic(base_url_to_scan, wordlist_path, output_file_prefix, summary_file_id, auth_session=None, max_workers=20):
     """Generic path enumeration function for directories or files."""
@@ -738,7 +717,7 @@ def enumerate_paths_generic(base_url_to_scan, wordlist_path, output_file_prefix,
     requester = make_requester(auth_session)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check)
+        list(tqdm(executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check), total=len(urls_to_check), desc=f"{output_file_prefix.title()}", leave=False))
 
 
 def enumerate_combined_paths(base_url_to_scan, dir_wordlist_path, file_wordlist_path, auth_session=None, max_workers=20):
@@ -775,7 +754,7 @@ def enumerate_combined_paths(base_url_to_scan, dir_wordlist_path, file_wordlist_
     requester = make_requester(auth_session)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check)
+        list(tqdm(executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check), total=len(urls_to_check), desc="Combined Paths", leave=False))
 
 
 visited_links_crawler = set()
@@ -798,6 +777,7 @@ def crawler(start_url, max_depth=2, auth_session=None):
     requester = make_requester(auth_session)
 
     print(f"[+] Starting crawler on {current_start_url} (max depth: {max_depth})")
+    pbar = tqdm(desc="Crawling", unit="url", leave=False)
 
     def fetch_links_recursive(current_url_to_crawl, current_depth):
         global visited_links_crawler
@@ -824,8 +804,9 @@ def crawler(start_url, max_depth=2, auth_session=None):
         finally: # Add small random delay after each request to mitigate rate-limiting
             time.sleep(random.uniform(0.1, 0.5))
 
-        print(f"    Crawling (Depth {current_depth}): {actual_crawled_url}")
+        tqdm.write(f"    Crawling (Depth {current_depth}): {actual_crawled_url}")
         append_to_file(output_file, actual_crawled_url)
+        pbar.update(1)
 
         soup = BeautifulSoup(response.text, 'html.parser')
         page_links = set()
@@ -845,6 +826,7 @@ def crawler(start_url, max_depth=2, auth_session=None):
             fetch_links_recursive(found_link, current_depth + 1)
 
     fetch_links_recursive(current_start_url, 1)
+    pbar.close()
     append_to_file(summary_file, f"Crawler finished. Found {len(visited_links_crawler)} unique links. Stored in {output_file}")
     print(f"[+] Crawler finished. Results in {output_file}")
 
@@ -943,8 +925,8 @@ def find_emails(url_list_file, auth_session=None):
         print(colored(f"    No URLs to scan for emails in {url_list_file}.", "yellow"))
         return
 
-    for url in urls_to_scan:
-        print(f"    Processing for emails: {url}")
+    for url in tqdm(urls_to_scan, desc="Email Search", unit="url", leave=False):
+        tqdm.write(f"    Processing for emails: {url}")
         # User-Agent is already handled by make_requester
         try:
             response = requester.get(url, timeout=7, allow_redirects=True, verify=False)
@@ -952,7 +934,7 @@ def find_emails(url_list_file, auth_session=None):
             if found_emails_on_page:
                 for email in found_emails_on_page:
                     append_to_file(output_temp_emails, email)
-                    print(colored(f"        Found email: {email}", "green"))
+                    tqdm.write(colored(f"        Found email: {email}", "green"))
         except ReqExc as e:
             print(colored(f"        Failed to access {url} for email search: {e}", "yellow"))
         finally: # Add small random delay after each request to mitigate rate-limiting
@@ -1033,15 +1015,18 @@ def bypass_403(url_to_check, auth_session=None):
         {"X-HTTP-Method-Override": "GET"}, {"X-Rewrite-URL": "/"},
         {"Referer": urlparse(url_to_check)._replace(path="", query="", fragment="").geturl()},
         {"User-Agent": "Googlebot/2.1 (+http://www.google.com/bot.html)"},
+        {"X-Forwarded-For": "8.8.8.8"}, {"X-Remote-IP": "127.0.0.1"},
+        {"X-Remote-Addr": "127.0.0.1"}, {"X-Client-IP": "127.0.0.1"},
+        {"X-Host": "127.0.0.1"}, {"X-Originating-IP": "127.0.0.1"},
     ]
 
-    for headers_to_try in headers_payloads:
+    for headers_to_try in tqdm(headers_payloads, desc="Bypassing 403", leave=False):
         status_code, _ = make_request_for_bypass(url_to_check, headers_to_try, auth_session)
 
         if status_code and 200 <= status_code < 300:
             payload_str = ", ".join([f"{k}: {v}" for k, v in headers_to_try.items()])
             success_msg = f"[BYPASS SUCCESSFUL] URL: {url_to_check} | Payload: [{payload_str}] | Status: {status_code}"
-            print(colored(success_msg, "green"))
+            print(colored(f"\n{success_msg}", "green"))
             append_to_file(output_bypassed_file, success_msg)
             append_to_file(graph_bypassed_file, url_to_check)
             return
@@ -1084,6 +1069,10 @@ def run_nmap_scan(target_ip, arguments, scan_name, output_file_id):
     """Runs a generic Nmap scan."""
     if not target_ip:
         print(colored(f"[-] Nmap {scan_name}: IP address is None, skipping scan.", "red"))
+        return
+
+    if not check_dependency("nmap"):
+        print(colored(f"[-] Nmap {scan_name}: Nmap binary not found. Skipping scan.", "red"))
         return
 
     summary_output_file = f"output/{output_file_id}_nmap_{scan_name.lower().replace(' ', '_')}.txt"
@@ -1248,6 +1237,7 @@ def parse_arguments():
         description=colored("WebSecAnalyzer - Web Application Security Scanner", "cyan", attrs=["bold"]),
         epilog="Example: python %(prog)s -d example.com -o report.pdf --auto-csrf"
     )
+    parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {__version__}")
     target_group = parser.add_mutually_exclusive_group(required=True)
     target_group.add_argument("-d", "--domain", help="Target domain (e.g., example.com)", type=str)
     target_group.add_argument("-u", "--url", help="Target URL (e.g., https://example.com)", type=str)
@@ -1278,14 +1268,15 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def run_command(command_str, log_file_base=None):
+def run_command(command_args, log_file_base=None):
     """
-    Runs an external command.
-    Note: shell=True can be a security risk if command components are from untrusted input.
+    Runs an external command safely using a list of arguments.
     """
-    print(colored(f"[CMD] Executing: {command_str}", "magenta"))
+    command_display = " ".join(command_args) if isinstance(command_args, list) else command_args
+    print(colored(f"[CMD] Executing: {command_display}", "magenta"))
     try:
-        process = subprocess.run(command_str, shell=True, check=True, capture_output=True, text=True, timeout=300)
+        # Use shell=False (default) and pass arguments as a list to prevent command injection
+        process = subprocess.run(command_args, shell=False, check=True, capture_output=True, text=True, timeout=300)
         if log_file_base:
             append_to_file(f"raw/{log_file_base}_stdout.txt", process.stdout)
             if process.stderr:
@@ -1294,24 +1285,24 @@ def run_command(command_str, log_file_base=None):
         if process.stdout.strip(): print(colored(f"    Output (first 100 chars): {process.stdout.strip()[:100]}...", "light_grey"))
 
     except subprocess.CalledProcessError as e:
-        print(colored(f"    Error executing command: {command_str}\n    Return Code: {e.returncode}", "red"))
+        print(colored(f"    Error executing command: {command_display}\n    Return Code: {e.returncode}", "red"))
         if log_file_base:
             append_to_file(f"raw/{log_file_base}_error.txt", f"Error: {e}\nStdout: {e.stdout}\nStderr: {e.stderr}")
         if e.stdout: print(colored(f"    Stdout: {e.stdout.strip()}", "red"))
         if e.stderr: print(colored(f"    Stderr: {e.stderr.strip()}", "red"))
     except FileNotFoundError:
-        tool_name = command_str.split()[0]
-        print(colored(f"    Error: Command not found (ensure '{tool_name}' is installed and in PATH, or it's a valid shell command): {command_str}", "red"))
+        tool_name = command_args[0] if isinstance(command_args, list) else command_args.split()[0]
+        print(colored(f"    Error: Command not found (ensure '{tool_name}' is installed and in PATH): {command_display}", "red"))
         if log_file_base: append_to_file(f"raw/{log_file_base}_error.txt", f"Command not found: {tool_name}")
     except subprocess.TimeoutExpired:
-        print(colored(f"    Timeout executing command: {command_str}", "red"))
+        print(colored(f"    Timeout executing command: {command_display}", "red"))
         if log_file_base: append_to_file(f"raw/{log_file_base}_error.txt", "Command timed out after 5 minutes.")
 
 
 def is_alive(target_host_or_url):
     """
     Checks if a target is alive by making HTTP/HTTPS GET requests.
-    Prioritizes HTTP for broader compatibility, then HTTPS.
+    Prioritizes HTTPS, then falls back to HTTP.
     Returns the working URL (with scheme) or None.
     """
     # If the user explicitly provided a scheme, try only that one first
@@ -1326,9 +1317,9 @@ def is_alive(target_host_or_url):
         elif parsed_input.scheme == "http":
             schemes_to_try.append("https")
     else:
-        # If no scheme is provided, try HTTP first for broader compatibility (as observed with vulnweb.com)
-        schemes_to_try.append("http")
+        # If no scheme is provided, try HTTPS first for better security defaults
         schemes_to_try.append("https")
+        schemes_to_try.append("http")
 
     # Ensure uniqueness of schemes to avoid redundant attempts
     schemes_to_try = list(dict.fromkeys(schemes_to_try)) # Python 3.7+ preserves order
@@ -1375,27 +1366,29 @@ def export_cookies_to_netscape_file(session_cookies, filepath):
         print(colored(f"    Error exporting session cookies: {e}", "red"))
 
 
-if __name__ == "__main__":
+def run_scan(target_input, subdomain_wordlist=wordlist_sub_default, directory_wordlist=wordlist_dic_default,
+             file_wordlist=wordlist_file_default, depth=2, output_file="WebSecAnalyzer_Report.pdf", threads=20,
+             login_url=None, username=None, password=None, username_field="username", password_field="password",
+             login_success_keyword=None, login_debug=False, unauthenticated_only=False, export_session_cookies=None,
+             auth_header=None, auto_csrf=False, auto_fields=False):
+
     main_start_time = datetime.now()
+    print(f"Starting time is {main_start_time}")
 
     ascii_banner = pyfiglet.figlet_format("WebSecAnalyzer", font="slant")
     print(colored(ascii_banner, "cyan", attrs=["bold"]))
     print(colored("Developed by: Abdullah Riaz, Ayaan Butt, M. Hamza Hussain", "green"))
     print("-" * 70)
 
-    args = parse_arguments()
-
-    target_input = args.domain or args.url or args.ip_address
-
     print(f"[+] Target specified: {target_input}")
-    
+
     # --- CRITICAL FIX: Determine canonical working URL (with scheme) early ---
     # `is_alive` will now return the actual working URL (e.g., http://example.com)
     validated_target_url = is_alive(target_input)
     if not validated_target_url:
-        print(colored(f"[!] Error: The target '{target_input}' is not reachable via HTTP or HTTPS. Exiting.", "red"))
-        sys.exit(1)
-    
+        print(colored(f"[!] Error: The target '{target_input}' is not reachable via HTTP or HTTPS. Skipping scan.", "red"))
+        return False
+
     # Update primary_domain and primary_ip based on the *validated* URL
     primary_domain = extract_domain(validated_target_url)
     primary_ip = get_ip_from_domain(primary_domain) # Resolve IP from working domain
@@ -1403,15 +1396,15 @@ if __name__ == "__main__":
     print(colored(f"[+] Target '{target_input}' seems to be alive via {validated_target_url}.", "green"))
 
 
-    validate_wordlist(args.subdomain_wordlist)
-    validate_wordlist(args.directory_wordlist)
-    validate_wordlist(args.file_wordlist)
+    validate_wordlist(subdomain_wordlist)
+    validate_wordlist(directory_wordlist)
+    validate_wordlist(file_wordlist)
 
     authenticated_session = None
     auth_method_used = "None"
 
-    if args.auth_header and not args.unauthenticated_only:
-        print(colored(f"[+] Attempting authentication using custom header: {args.auth_header.split(':')[0]}:******", "blue"))
+    if auth_header and not unauthenticated_only:
+        print(colored(f"[+] Attempting authentication using custom header: {auth_header.split(':')[0]}:******", "blue"))
         authenticated_session = requests.Session()
         # Add retry logic to the session
         retries = Retry(total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]) # Add 429
@@ -1421,7 +1414,7 @@ if __name__ == "__main__":
 
         authenticated_session.headers.update({'User-Agent': get_random_user_agent()})
         try:
-            header_key, header_value = args.auth_header.split(":", 1)
+            header_key, header_value = auth_header.split(":", 1)
             authenticated_session.headers[header_key.strip()] = header_value.strip()
             auth_method_used = "Header"
             print(colored("[+] Custom authentication header set in session.", "green"))
@@ -1432,39 +1425,36 @@ if __name__ == "__main__":
             log_content += f"Session Headers After Auth: {json.dumps(dict(authenticated_session.headers), indent=2)}\n\n"
             append_to_file(auth_log_file, log_content)
 
-            if args.export_session_cookies:
-                export_cookies_to_netscape_file(authenticated_session.cookies, args.export_session_cookies)
+            if export_session_cookies:
+                export_cookies_to_netscape_file(authenticated_session.cookies, export_session_cookies)
         except ValueError:
-            print(colored(f"[!] Invalid format for --auth-header. Expected 'Header-Name: Header-Value'. Got: {args.auth_header}", "red"))
+            print(colored(f"[!] Invalid format for --auth-header. Expected 'Header-Name: Header-Value'. Got: {auth_header}", "red"))
             authenticated_session = None
 
-    elif args.username and args.password and not args.unauthenticated_only:
+    elif username and password and not unauthenticated_only:
         # Use the validated_target_url as the default login_url if not specified
-        login_url_to_use = args.login_url if args.login_url else validated_target_url
-        # No need to normalize_url here, as validated_target_url already has correct scheme
-        # if not (login_url_to_use.startswith("http")):
-        #     login_url_to_use = normalize_url(login_url_to_use)
+        login_url_to_use = login_url if login_url else validated_target_url
 
         authenticated_session = attempt_login(
             login_url_to_use,
-            args.username,
-            args.password,
-            args.username_field,
-            args.password_field,
-            args.login_success_keyword,
-            args.login_debug,
-            args.auto_csrf,
-            args.auto_fields # Pass auto_fields argument
+            username,
+            password,
+            username_field,
+            password_field,
+            login_success_keyword,
+            login_debug,
+            auto_csrf,
+            auto_fields # Pass auto_fields argument
         )
         if authenticated_session:
             print(colored("[+] Form-based authentication successful. Proceeding with authenticated session.", "green"))
             auth_method_used = "Login Form"
-            if args.export_session_cookies:
-                export_cookies_to_netscape_file(authenticated_session.cookies, args.export_session_cookies)
+            if export_session_cookies:
+                export_cookies_to_netscape_file(authenticated_session.cookies, export_session_cookies)
         else:
             print(colored("[-] Form-based authentication failed or credentials not fully processed. Proceeding with unauthenticated scan.", "yellow"))
 
-    elif args.unauthenticated_only:
+    elif unauthenticated_only:
         print(colored("[+] --unauthenticated-only flag set. Skipping all authentication attempts.", "yellow"))
     else:
         print(colored("[+] No credentials or auth-header provided. Proceeding with unauthenticated scan.", "yellow"))
@@ -1493,13 +1483,25 @@ if __name__ == "__main__":
             print(colored("[!] Skipping SSL information check: Target URL is HTTP.", "yellow"))
         crtsh_lookup(primary_domain)
         # Pass the validated_target_url to subdomain_bruteforce so it can use the correct scheme
-        subdomain_bruteforce(validated_target_url, args.subdomain_wordlist, authenticated_session, max_workers=args.threads)
+        subdomain_bruteforce(validated_target_url, subdomain_wordlist, authenticated_session, max_workers=threads)
 
         if sys.platform.startswith("linux"):
             print(colored("[i] Running external subdomain enumeration tools (Linux only)...", "cyan"))
-            run_command(f"subfinder -d {primary_domain} -silent -o raw/subfinder_output.txt", "subfinder")
-            run_command(f"assetfinder --subs-only {primary_domain} > raw/assetfinder_output.txt", "assetfinder")
-            run_command(f"amass enum -passive -d {primary_domain} -o raw/amass_passive_output.txt", "amass_passive")
+            run_command(["subfinder", "-d", primary_domain, "-silent", "-o", "raw/subfinder_output.txt"], "subfinder")
+
+            # assetfinder doesn't support -o, using redirect via shell is risky,
+            # let's refactor run_command to handle output file directly if needed,
+            # or just use shell=True ONLY for these non-user-controlled parts if necessary.
+            # But primary_domain is somewhat user controlled.
+            # Best is to run it and capture output.
+            try:
+                res = subprocess.run(["assetfinder", "--subs-only", primary_domain], capture_output=True, text=True, check=True)
+                with open("raw/assetfinder_output.txt", "w") as f:
+                    f.write(res.stdout)
+            except Exception as e:
+                print(colored(f"    Error running assetfinder: {e}", "red"))
+
+            run_command(["amass", "enum", "-passive", "-d", primary_domain, "-o", "raw/amass_passive_output.txt"], "amass_passive")
 
             combined_subs_file = "raw/all_discovered_subs_temp.txt"
             with open(combined_subs_file, "w", encoding="utf-8") as f_comb: pass
@@ -1508,27 +1510,35 @@ if __name__ == "__main__":
                     with open(tool_out_file, "r", encoding="utf-8") as infile, open(combined_subs_file, "a", encoding="utf-8") as outfile:
                         outfile.write(infile.read())
 
-            run_command(f"cat {combined_subs_file} | sort -u > raw/all_discovered_subs_sorted.txt", "sort_subs")
+            # Replace shell pipes with python logic
+            if os.path.exists(combined_subs_file):
+                with open(combined_subs_file, "r") as f:
+                    subs = set(f.read().splitlines())
+                with open("raw/all_discovered_subs_sorted.txt", "w") as f:
+                    for s in sorted(list(subs)):
+                        f.write(s + "\n")
 
-            httpx_base_cmd = f"httpx -silent -status-code -threads {args.threads} -timeout 10"
-            run_command(f"{httpx_base_cmd} -list raw/all_discovered_subs_sorted.txt -mc 200 -o graph/httpx_200_output.txt", "httpx_200")
-            run_command(f"{httpx_base_cmd} -list raw/all_discovered_subs_sorted.txt -mc 403 -o graph/httpx_403_output.txt", "httpx_403")
+            httpx_common_args = ["httpx", "-silent", "-status-code", "-threads", str(threads), "-timeout", "10", "-list", "raw/all_discovered_subs_sorted.txt"]
+            run_command(httpx_common_args + ["-mc", "200", "-o", "graph/httpx_200_output.txt"], "httpx_200")
+            run_command(httpx_common_args + ["-mc", "403", "-o", "graph/httpx_403_output.txt"], "httpx_403")
 
-            with open("raw/httpx_resolved_all.txt", "w", encoding="utf-8") as f_httpx_all: pass
+            all_httpx_resolved = set()
             for httpx_out in ["graph/httpx_200_output.txt", "graph/httpx_403_output.txt"]:
                 if os.path.exists(httpx_out):
-                     with open(httpx_out, "r", encoding="utf-8") as infile, open("raw/httpx_resolved_all.txt", "a", encoding="utf-8") as outfile:
-                        outfile.write(infile.read())
-            run_command(f"cat raw/httpx_resolved_all.txt | sort -u > raw/httpx_resolved_all_sorted.txt", "httpx_combine_resolved")
+                     with open(httpx_out, "r", encoding="utf-8") as infile:
+                        all_httpx_resolved.update(infile.read().splitlines())
+            with open("raw/httpx_resolved_all_sorted.txt", "w") as outfile:
+                for line in sorted(list(all_httpx_resolved)):
+                    outfile.write(line + "\n")
         else:
             print(colored("[!] Skipping Linux-specific external subdomain tools (not on Linux).", "yellow"))
 
     # Pass max_workers argument to enumeration functions
-    enumerate_paths_generic(validated_target_url, args.directory_wordlist, "directory", "SA", authenticated_session, max_workers=args.threads)
-    enumerate_paths_generic(validated_target_url, args.file_wordlist, "file", "SB", authenticated_session, max_workers=args.threads)
-    enumerate_combined_paths(validated_target_url, args.directory_wordlist, args.file_wordlist, authenticated_session, max_workers=args.threads)
+    enumerate_paths_generic(validated_target_url, directory_wordlist, "directory", "SA", authenticated_session, max_workers=threads)
+    enumerate_paths_generic(validated_target_url, file_wordlist, "file", "SB", authenticated_session, max_workers=threads)
+    enumerate_combined_paths(validated_target_url, directory_wordlist, file_wordlist, authenticated_session, max_workers=threads)
 
-    crawler(validated_target_url, args.depth, authenticated_session)
+    crawler(validated_target_url, depth, authenticated_session)
     filter_urls("raw/crawler_output.txt", "raw/filtered_urls.txt")
 
     consolidated_url_file = gather_discovered_urls()
@@ -1572,7 +1582,7 @@ if __name__ == "__main__":
 
     graph_generated = generate_graph(graph_dir="graph", output_image_file="scan_summary_graph.png")
     generate_pdf_report(
-        report_filename=args.output_file,
+        report_filename=output_file,
         output_dir="output",
         graph_image_path="scan_summary_graph.png" if graph_generated else None
     )
@@ -1581,5 +1591,31 @@ if __name__ == "__main__":
     print("-" * 70)
     print(colored(f"[+] WebSecAnalyzer scan completed at: {final_timestamp}", "green", attrs=["bold"]))
     print(colored(f"    Total execution time: {final_timestamp - main_start_time}", "green"))
-    print(colored(f"    PDF Report saved as: {args.output_file}", "green"))
+    print(colored(f"    PDF Report saved as: {output_file}", "green"))
     print("-" * 70)
+    return True
+
+if __name__ == "__main__":
+    args = parse_arguments()
+    target_input = args.domain or args.url or args.ip_address
+    run_scan(
+        target_input,
+        subdomain_wordlist=args.subdomain_wordlist,
+        directory_wordlist=args.directory_wordlist,
+        file_wordlist=args.file_wordlist,
+        depth=args.depth,
+        output_file=args.output_file,
+        threads=args.threads,
+        login_url=args.login_url,
+        username=args.username,
+        password=args.password,
+        username_field=args.username_field,
+        password_field=args.password_field,
+        login_success_keyword=args.login_success_keyword,
+        login_debug=args.login_debug,
+        unauthenticated_only=args.unauthenticated_only,
+        export_session_cookies=args.export_session_cookies,
+        auth_header=args.auth_header,
+        auto_csrf=args.auto_csrf,
+        auto_fields=args.auto_fields
+    )

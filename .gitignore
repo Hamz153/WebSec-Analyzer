@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.DS_Store
+output/
+raw/
+graph/
+*.log
+*.pdf
+verification/
