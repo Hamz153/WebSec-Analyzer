@@ -6,7 +6,7 @@ import dns.resolver
 import whois
 import requests
 from requests.exceptions import RequestException as ReqExc, ConnectionError as ConnErr, Timeout as TimeoutErr
-from urllib.parse import urljoin, urlparse, urlunparse # Import urlunparse for is_alive fix
+from urllib.parse import urljoin, urlparse, urlunparse
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from bs4 import BeautifulSoup
@@ -20,12 +20,17 @@ import random
 import matplotlib.pyplot as plt
 import argparse
 import sys
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import pyfiglet
 from termcolor import colored
 import subprocess
+from tqdm import tqdm
+import shutil
+
+# Version information
+__version__ = "1.1.0"
 
 # Directory setup
 dir_path = r"output"
@@ -74,8 +79,8 @@ def get_ip_from_domain(domain):
 
 def print_heading():
     """Prints a standardized heading for tabular output."""
-    print(f"{'Path':<60} {'Status Code':<15} {'Content Length':<15} {'Word Count':<10} {'Char Count':<10} {'Message':<15}")
-    print("=" * 135)
+    tqdm.write(f"{'Path':<60} {'Status Code':<15} {'Content Length':<15} {'Word Count':<10} {'Char Count':<10} {'Message':<15}")
+    tqdm.write("=" * 135)
 
 
 def validate_wordlist(wordlist_path):
@@ -105,6 +110,13 @@ def normalize_url(target_url_in):
         final_url += "#" + parsed_url.fragment
     return final_url
 
+def check_dependency(tool_name):
+    """Checks if a command-line tool is installed."""
+    if shutil.which(tool_name) is None:
+        print(colored(f"[!] Warning: '{tool_name}' is not installed or not in PATH.", "yellow"))
+        return False
+    return True
+
 def make_requester(auth_session=None):
     """
     Returns the appropriate requester (session or requests module).
@@ -123,37 +135,6 @@ def make_requester(auth_session=None):
         session.headers.update({'User-Agent': get_random_user_agent()})
         return session
 
-def domain_to_url(target_domain_or_url, auth_session=None):
-    """
-    Validates and normalizes a domain or URL by making a request.
-    This is kept for initial validation of domain/URL to determine base,
-    but `is_alive` will now determine the canonical working URL/scheme.
-    """
-    parsed_url = urlparse(target_domain_or_url)
-    target_url = target_domain_or_url
-    if not parsed_url.scheme:
-        target_url = "https://" + target_domain_or_url # Default to HTTPS for initial check
-
-    requester = make_requester(auth_session)
-
-    try:
-        response = requester.get(target_url, timeout=10, allow_redirects=True, verify=False)
-        final_url_after_redirects = response.url
-        if 200 <= response.status_code < 300:
-            print(colored(f"[+] Initial URL validation: {final_url_after_redirects} (Status: {response.status_code})", "green"))
-            return final_url_after_redirects, True
-        else:
-            print(colored(f"[-] Initial URL validation: {target_url} exists but returned status: {response.status_code}", "yellow"))
-            return target_url, False
-    except ConnErr:
-        print(colored(f"[-] Initial URL validation: Connection Error for {target_url}", "red"))
-        return target_url, False
-    except TimeoutErr:
-        print(colored(f"[-] Initial URL validation: Request Timeout for {target_url}", "red"))
-        return target_url, False
-    except ReqExc as e:
-        print(colored(f"[-] Initial URL validation: Request Exception for {target_url}: {e}", "red"))
-        return target_url, False
 
 
 def extract_domain(url_or_domain):
@@ -671,10 +652,10 @@ def _process_single_url(url_item, requester, file_200, file_403, output_summary_
         else:
             msg_display = status_msg
 
-        print(f"{url_item:<60} {response.status_code:<15} {content_length:<15} {word_count:<10} {char_count:<10} {msg_display:<15}")
+        tqdm.write(f"{url_item:<60} {response.status_code:<15} {content_length:<15} {word_count:<10} {char_count:<10} {msg_display:<15}")
 
     except ReqExc:
-        print(f"{url_item:<60} {'N/A':<15} {'N/A':<15} {'N/A':<10} {'N/A':<10} {'Connection Error':<15}")
+        tqdm.write(f"{url_item:<60} {'N/A':<15} {'N/A':<15} {'N/A':<10} {'N/A':<10} {'Connection Error':<15}")
     finally: # Add small random delay after each request to mitigate rate-limiting
         time.sleep(random.uniform(0.1, 0.5))
 
@@ -708,7 +689,7 @@ def subdomain_bruteforce(base_domain, wordlist_path, auth_session=None, max_work
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # map() returns results in the order the tasks were submitted
-        executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check)
+        list(tqdm(executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check), total=len(urls_to_check), desc="Subdomains", leave=False))
 
 def enumerate_paths_generic(base_url_to_scan, wordlist_path, output_file_prefix, summary_file_id, auth_session=None, max_workers=20):
     """Generic path enumeration function for directories or files."""
@@ -738,7 +719,7 @@ def enumerate_paths_generic(base_url_to_scan, wordlist_path, output_file_prefix,
     requester = make_requester(auth_session)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check)
+        list(tqdm(executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check), total=len(urls_to_check), desc=f"{output_file_prefix.title()}", leave=False))
 
 
 def enumerate_combined_paths(base_url_to_scan, dir_wordlist_path, file_wordlist_path, auth_session=None, max_workers=20):
@@ -775,7 +756,7 @@ def enumerate_combined_paths(base_url_to_scan, dir_wordlist_path, file_wordlist_
     requester = make_requester(auth_session)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check)
+        list(tqdm(executor.map(lambda url: _process_single_url(url, requester, file_200, file_403, output_summary_file), urls_to_check), total=len(urls_to_check), desc="Combined Paths", leave=False))
 
 
 visited_links_crawler = set()
@@ -798,6 +779,7 @@ def crawler(start_url, max_depth=2, auth_session=None):
     requester = make_requester(auth_session)
 
     print(f"[+] Starting crawler on {current_start_url} (max depth: {max_depth})")
+    pbar = tqdm(desc="Crawling", unit="url", leave=False)
 
     def fetch_links_recursive(current_url_to_crawl, current_depth):
         global visited_links_crawler
@@ -824,8 +806,9 @@ def crawler(start_url, max_depth=2, auth_session=None):
         finally: # Add small random delay after each request to mitigate rate-limiting
             time.sleep(random.uniform(0.1, 0.5))
 
-        print(f"    Crawling (Depth {current_depth}): {actual_crawled_url}")
+        tqdm.write(f"    Crawling (Depth {current_depth}): {actual_crawled_url}")
         append_to_file(output_file, actual_crawled_url)
+        pbar.update(1)
 
         soup = BeautifulSoup(response.text, 'html.parser')
         page_links = set()
@@ -845,6 +828,7 @@ def crawler(start_url, max_depth=2, auth_session=None):
             fetch_links_recursive(found_link, current_depth + 1)
 
     fetch_links_recursive(current_start_url, 1)
+    pbar.close()
     append_to_file(summary_file, f"Crawler finished. Found {len(visited_links_crawler)} unique links. Stored in {output_file}")
     print(f"[+] Crawler finished. Results in {output_file}")
 
@@ -943,8 +927,8 @@ def find_emails(url_list_file, auth_session=None):
         print(colored(f"    No URLs to scan for emails in {url_list_file}.", "yellow"))
         return
 
-    for url in urls_to_scan:
-        print(f"    Processing for emails: {url}")
+    for url in tqdm(urls_to_scan, desc="Email Search", unit="url", leave=False):
+        tqdm.write(f"    Processing for emails: {url}")
         # User-Agent is already handled by make_requester
         try:
             response = requester.get(url, timeout=7, allow_redirects=True, verify=False)
@@ -952,7 +936,7 @@ def find_emails(url_list_file, auth_session=None):
             if found_emails_on_page:
                 for email in found_emails_on_page:
                     append_to_file(output_temp_emails, email)
-                    print(colored(f"        Found email: {email}", "green"))
+                    tqdm.write(colored(f"        Found email: {email}", "green"))
         except ReqExc as e:
             print(colored(f"        Failed to access {url} for email search: {e}", "yellow"))
         finally: # Add small random delay after each request to mitigate rate-limiting
@@ -1033,15 +1017,18 @@ def bypass_403(url_to_check, auth_session=None):
         {"X-HTTP-Method-Override": "GET"}, {"X-Rewrite-URL": "/"},
         {"Referer": urlparse(url_to_check)._replace(path="", query="", fragment="").geturl()},
         {"User-Agent": "Googlebot/2.1 (+http://www.google.com/bot.html)"},
+        {"X-Forwarded-For": "8.8.8.8"}, {"X-Remote-IP": "127.0.0.1"},
+        {"X-Remote-Addr": "127.0.0.1"}, {"X-Client-IP": "127.0.0.1"},
+        {"X-Host": "127.0.0.1"}, {"X-Originating-IP": "127.0.0.1"},
     ]
 
-    for headers_to_try in headers_payloads:
+    for headers_to_try in tqdm(headers_payloads, desc="Bypassing 403", leave=False):
         status_code, _ = make_request_for_bypass(url_to_check, headers_to_try, auth_session)
 
         if status_code and 200 <= status_code < 300:
             payload_str = ", ".join([f"{k}: {v}" for k, v in headers_to_try.items()])
             success_msg = f"[BYPASS SUCCESSFUL] URL: {url_to_check} | Payload: [{payload_str}] | Status: {status_code}"
-            print(colored(success_msg, "green"))
+            print(colored(f"\n{success_msg}", "green"))
             append_to_file(output_bypassed_file, success_msg)
             append_to_file(graph_bypassed_file, url_to_check)
             return
@@ -1084,6 +1071,10 @@ def run_nmap_scan(target_ip, arguments, scan_name, output_file_id):
     """Runs a generic Nmap scan."""
     if not target_ip:
         print(colored(f"[-] Nmap {scan_name}: IP address is None, skipping scan.", "red"))
+        return
+
+    if not check_dependency("nmap"):
+        print(colored(f"[-] Nmap {scan_name}: Nmap binary not found. Skipping scan.", "red"))
         return
 
     summary_output_file = f"output/{output_file_id}_nmap_{scan_name.lower().replace(' ', '_')}.txt"
@@ -1248,6 +1239,7 @@ def parse_arguments():
         description=colored("WebSecAnalyzer - Web Application Security Scanner", "cyan", attrs=["bold"]),
         epilog="Example: python %(prog)s -d example.com -o report.pdf --auto-csrf"
     )
+    parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {__version__}")
     target_group = parser.add_mutually_exclusive_group(required=True)
     target_group.add_argument("-d", "--domain", help="Target domain (e.g., example.com)", type=str)
     target_group.add_argument("-u", "--url", help="Target URL (e.g., https://example.com)", type=str)
@@ -1311,7 +1303,7 @@ def run_command(command_str, log_file_base=None):
 def is_alive(target_host_or_url):
     """
     Checks if a target is alive by making HTTP/HTTPS GET requests.
-    Prioritizes HTTP for broader compatibility, then HTTPS.
+    Prioritizes HTTPS, then falls back to HTTP.
     Returns the working URL (with scheme) or None.
     """
     # If the user explicitly provided a scheme, try only that one first
@@ -1326,9 +1318,9 @@ def is_alive(target_host_or_url):
         elif parsed_input.scheme == "http":
             schemes_to_try.append("https")
     else:
-        # If no scheme is provided, try HTTP first for broader compatibility (as observed with vulnweb.com)
-        schemes_to_try.append("http")
+        # If no scheme is provided, try HTTPS first for better security defaults
         schemes_to_try.append("https")
+        schemes_to_try.append("http")
 
     # Ensure uniqueness of schemes to avoid redundant attempts
     schemes_to_try = list(dict.fromkeys(schemes_to_try)) # Python 3.7+ preserves order
@@ -1388,14 +1380,14 @@ if __name__ == "__main__":
     target_input = args.domain or args.url or args.ip_address
 
     print(f"[+] Target specified: {target_input}")
-    
+
     # --- CRITICAL FIX: Determine canonical working URL (with scheme) early ---
     # `is_alive` will now return the actual working URL (e.g., http://example.com)
     validated_target_url = is_alive(target_input)
     if not validated_target_url:
         print(colored(f"[!] Error: The target '{target_input}' is not reachable via HTTP or HTTPS. Exiting.", "red"))
         sys.exit(1)
-    
+
     # Update primary_domain and primary_ip based on the *validated* URL
     primary_domain = extract_domain(validated_target_url)
     primary_ip = get_ip_from_domain(primary_domain) # Resolve IP from working domain

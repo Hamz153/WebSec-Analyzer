@@ -84,7 +84,7 @@ WebSecAnalyzer operates via a Command-Line Interface (CLI). You can specify a ta
 To run a full scan and generate a PDF report:
 
 ```bash
-python3 websec_auth_updated6_gemni.py -d example.com -o WebSecAnalyzer_Report.pdf
+python3 WebSecAnalyzer.py -d example.com -o WebSecAnalyzer_Report.pdf
 ```
 
 #### Scan with Custom Wordlists
@@ -92,7 +92,7 @@ python3 websec_auth_updated6_gemni.py -d example.com -o WebSecAnalyzer_Report.pd
 You can provide your own wordlists for subdomain, directory, and file brute-forcing:
 
 ```bash
-python3 websec_auth_updated6_gemni.py -u https://example.com --subdomain-wordlist my_subs.txt --directory-wordlist my_dirs.txt --file-wordlist my_files.txt -o custom_report.pdf
+python3 WebSecAnalyzer.py -u https://example.com --subdomain-wordlist my_subs.txt --directory-wordlist my_dirs.txt --file-wordlist my_files.txt -o custom_report.pdf
 ```
 
 #### Authenticated Scan
@@ -100,7 +100,7 @@ python3 websec_auth_updated6_gemni.py -u https://example.com --subdomain-wordlis
 WebSecAnalyzer supports scans behind login pages. It can auto-detect form fields and CSRF tokens.
 
 ```bash
-python3 websec_auth_updated6_gemni.py -u https://example.com --login-url https://example.com/login --username myuser --password mypass -o auth_report.pdf --auto-csrf --auto-fields
+python3 WebSecAnalyzer.py -u https://example.com --login-url https://example.com/login --username myuser --password mypass -o auth_report.pdf --auto-csrf --auto-fields
 ```
 
 ### Reporting

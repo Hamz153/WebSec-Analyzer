@@ -1,0 +1,12 @@
+requests
+beautifulsoup4
+python-nmap
+dnspython
+python-whois
+fpdf
+matplotlib
+pyfiglet
+termcolor
+tabulate
+urllib3
+tqdm

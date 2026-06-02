@@ -1,0 +1,484 @@
+--- Certificate Transparency Logs for example.com ---
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing RSA CA 3
+  Common Name: example.com
+  Not Before: 2026-05-31T21:39:00
+  Not After: 2026-08-29T21:41:26
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing ECC CA 3
+  Common Name: example.com
+  Not Before: 2026-05-31T21:39:12
+  Not After: 2026-08-29T21:41:26
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing ECC CA 3
+  Common Name: example.com
+  Not Before: 2026-05-31T21:39:12
+  Not After: 2026-08-29T21:41:26
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing RSA CA 3
+  Common Name: example.com
+  Not Before: 2026-05-31T21:39:00
+  Not After: 2026-08-29T21:41:26
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV E36
+  Common Name: example.com
+  Not Before: 2026-04-15T00:00:00
+  Not After: 2026-07-14T21:16:26
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV E36
+  Common Name: example.com
+  Not Before: 2026-04-15T00:00:00
+  Not After: 2026-07-14T21:16:26
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV R36
+  Common Name: example.com
+  Not Before: 2026-04-15T00:00:00
+  Not After: 2026-07-14T21:13:19
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV R36
+  Common Name: example.com
+  Not Before: 2026-04-15T00:00:00
+  Not After: 2026-07-14T21:13:19
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O="CLOUDFLARE, INC.", CN=Cloudflare TLS Issuing ECC CA 1
+  Common Name: example.com
+  Not Before: 2026-04-02T21:18:57
+  Not After: 2026-07-01T21:24:46
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O="CLOUDFLARE, INC.", CN=Cloudflare TLS Issuing RSA CA 1
+  Common Name: example.com
+  Not Before: 2026-04-02T21:17:13
+  Not After: 2026-07-01T21:24:45
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O="CLOUDFLARE, INC.", CN=Cloudflare TLS Issuing ECC CA 1
+  Common Name: example.com
+  Not Before: 2026-04-02T21:18:57
+  Not After: 2026-07-01T21:24:46
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O="CLOUDFLARE, INC.", CN=Cloudflare TLS Issuing RSA CA 1
+  Common Name: example.com
+  Not Before: 2026-04-02T21:17:13
+  Not After: 2026-07-01T21:24:45
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV E36
+  Common Name: example.com
+  Not Before: 2026-02-14T00:00:00
+  Not After: 2026-05-15T03:35:45
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV E36
+  Common Name: example.com
+  Not Before: 2026-02-14T00:00:00
+  Not After: 2026-05-15T03:35:45
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV R36
+  Common Name: example.com
+  Not Before: 2026-02-14T00:00:00
+  Not After: 2026-05-15T02:59:32
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV R36
+  Common Name: example.com
+  Not Before: 2026-02-14T00:00:00
+  Not After: 2026-05-15T02:59:32
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV R36
+  Common Name: example.com
+  Not Before: 2026-02-14T00:00:00
+  Not After: 2026-05-15T01:57:36
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV R36
+  Common Name: example.com
+  Not Before: 2026-02-14T00:00:00
+  Not After: 2026-05-15T01:57:36
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing ECC CA 3
+  Common Name: example.com
+  Not Before: 2026-02-13T18:53:48
+  Not After: 2026-05-14T18:57:50
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing RSA CA 3
+  Common Name: example.com
+  Not Before: 2026-02-13T18:50:59
+  Not After: 2026-05-14T18:57:50
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing ECC CA 3
+  Common Name: example.com
+  Not Before: 2026-02-13T18:53:48
+  Not After: 2026-05-14T18:57:50
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing RSA CA 3
+  Common Name: example.com
+  Not Before: 2026-02-13T18:50:59
+  Not After: 2026-05-14T18:57:50
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV E36
+  Common Name: example.com
+  Not Before: 2025-12-16T00:00:00
+  Not After: 2026-03-16T20:59:52
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV E36
+  Common Name: example.com
+  Not Before: 2025-12-16T00:00:00
+  Not After: 2026-03-16T20:59:52
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV R36
+  Common Name: example.com
+  Not Before: 2025-12-16T00:00:00
+  Not After: 2026-03-16T16:12:36
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA DV R36
+  Common Name: example.com
+  Not Before: 2025-12-16T00:00:00
+  Not After: 2026-03-16T16:12:36
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing ECC CA 3
+  Common Name: example.com
+  Not Before: 2025-12-16T19:39:32
+  Not After: 2026-03-16T18:32:44
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing RSA CA 3
+  Common Name: example.com
+  Not Before: 2025-12-16T18:50:39
+  Not After: 2026-03-16T18:32:44
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing ECC CA 3
+  Common Name: example.com
+  Not Before: 2025-12-16T19:39:32
+  Not After: 2026-03-16T18:32:44
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=SSL Corporation, CN=Cloudflare TLS Issuing RSA CA 3
+  Common Name: example.com
+  Not Before: 2025-12-16T18:50:39
+  Not After: 2026-03-16T18:32:44
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA OV R36
+  Common Name: example.com
+  Not Before: 2025-12-02T00:00:00
+  Not After: 2026-12-02T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA OV R36
+  Common Name: example.com
+  Not Before: 2025-12-02T00:00:00
+  Not After: 2026-12-02T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA OV R36
+  Common Name: example.com
+  Not Before: 2025-11-21T00:00:00
+  Not After: 2026-11-21T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA OV R36
+  Common Name: example.com
+  Not Before: 2025-11-21T00:00:00
+  Not After: 2026-11-21T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA OV R36
+  Common Name: example.com
+  Not Before: 2025-11-20T00:00:00
+  Not After: 2026-11-20T23:59:59
+  Identity: example.com
+
+  Issuer: C=GB, O=Sectigo Limited, CN=Sectigo Public Server Authentication CA OV R36
+  Common Name: example.com
+  Not Before: 2025-11-20T00:00:00
+  Not After: 2026-11-20T23:59:59
+  Identity: example.com
+
+  Issuer: C=GB, ST=Greater Manchester, L=Salford, O=Sectigo Limited, CN=Sectigo ECC Organization Validation Secure Server CA
+  Common Name: *.example.com
+  Not Before: 2025-02-07T00:00:00
+  Not After: 2026-03-10T23:59:59
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, ST=Greater Manchester, L=Salford, O=Sectigo Limited, CN=Sectigo ECC Organization Validation Secure Server CA
+  Common Name: *.example.com
+  Not Before: 2025-02-07T00:00:00
+  Not After: 2026-03-10T23:59:59
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert Global G3 TLS ECC SHA384 2020 CA1
+  Common Name: *.example.com
+  Not Before: 2025-01-15T00:00:00
+  Not After: 2026-01-15T23:59:59
+  Identity: *.example.com
+example.com
+
+  Issuer: C=GB, ST=Greater Manchester, L=Salford, O=Sectigo Limited, CN=Sectigo RSA Domain Validation Secure Server CA
+  Common Name: example.com
+  Not Before: 2025-01-27T00:00:00
+  Not After: 2025-04-28T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=GB, ST=Greater Manchester, L=Salford, O=Sectigo Limited, CN=Sectigo RSA Domain Validation Secure Server CA
+  Common Name: example.com
+  Not Before: 2025-01-27T00:00:00
+  Not After: 2025-04-28T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert Global G2 TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2025-01-14T00:00:00
+  Not After: 2026-02-14T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert Global G3 TLS ECC SHA384 2020 CA1
+  Common Name: *.example.com
+  Not Before: 2025-01-15T00:00:00
+  Not After: 2026-01-15T23:59:59
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert Global G2 TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2025-01-14T00:00:00
+  Not After: 2026-02-14T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert Global G2 TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2024-01-30T00:00:00
+  Not After: 2025-03-01T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert Global G2 TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2024-01-30T00:00:00
+  Not After: 2025-03-01T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2023-01-13T00:00:00
+  Not After: 2024-02-13T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2023-01-13T00:00:00
+  Not After: 2024-02-13T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2022-03-14T00:00:00
+  Not After: 2023-03-14T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2022-03-14T00:00:00
+  Not After: 2023-03-14T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2021-12-10T00:00:00
+  Not After: 2022-12-09T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2021-12-10T00:00:00
+  Not After: 2022-12-09T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2020-11-24T00:00:00
+  Not After: 2021-12-25T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert TLS RSA SHA256 2020 CA1
+  Common Name: www.example.org
+  Not Before: 2020-11-24T00:00:00
+  Not After: 2021-12-25T23:59:59
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert SHA2 Secure Server CA
+  Common Name: www.example.org
+  Not Before: 2018-11-28T00:00:00
+  Not After: 2020-12-02T12:00:00
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert SHA2 Secure Server CA
+  Common Name: www.example.org
+  Not Before: 2018-11-28T00:00:00
+  Not After: 2020-12-02T12:00:00
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert SHA2 Secure Server CA
+  Common Name: www.example.org
+  Not Before: 2018-11-28T00:00:00
+  Not After: 2020-12-02T12:00:00
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert SHA2 Secure Server CA
+  Common Name: www.example.org
+  Not Before: 2018-11-28T00:00:00
+  Not After: 2020-12-02T12:00:00
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, CN=DigiCert SHA2 Secure Server CA
+  Common Name: www.example.org
+  Not Before: 2018-11-28T00:00:00
+  Not After: 2020-12-02T12:00:00
+  Identity: example.com
+www.example.com
+
+  Issuer: emailAddress=pki_admin@sungard.com, O=SunGard Availability Services, CN=SAS Public CA v1
+  Common Name: *.hosted.jivesoftware.com
+  Not Before: 2010-09-02T16:36:49
+  Not After: 2011-10-01T16:31:00
+  Identity: subjectname@example.com
+
+  Issuer: emailAddress=pki_admin@sungard.com, O=SunGard Availability Services, CN=SAS Public CA v1
+  Common Name: *.uat3.hosted.jivesoftware.com
+  Not Before: 2010-09-02T16:37:43
+  Not After: 2011-10-01T16:32:00
+  Identity: subjectname@example.com
+
+  Issuer: C=US, O="thawte, Inc.", CN=thawte SSL CA - G2
+  Common Name: www.example.com
+  Not Before: 2016-07-14T00:00:00
+  Not After: 2017-07-14T23:59:59
+  Identity: example.com
+m.testexample.com
+www.example.com
+
+  Issuer: C=US, O="thawte, Inc.", CN=thawte SSL CA - G2
+  Common Name: *.example.com
+  Not Before: 2016-07-14T00:00:00
+  Not After: 2018-07-14T23:59:59
+  Identity: *.example.com
+example.com
+
+  Issuer: C=US, O="thawte, Inc.", CN=thawte SSL CA - G2
+  Common Name: www.example.com
+  Not Before: 2016-07-14T00:00:00
+  Not After: 2017-07-14T23:59:59
+  Identity: *.example.com
+example.com
+m.example.com
+www.example.com
+
+  Issuer: C=US, O=Symantec Corporation, OU=Symantec Trust Network, CN=Symantec Class 3 Secure Server CA - G4
+  Common Name: www.example.com
+  Not Before: 2016-07-14T00:00:00
+  Not After: 2018-07-14T23:59:59
+  Identity: dev.example.com
+example.com
+products.example.com
+support.example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, OU=www.digicert.com, CN=DigiCert SHA2 High Assurance Server CA
+  Common Name: www.example.org
+  Not Before: 2015-11-03T00:00:00
+  Not After: 2018-11-28T12:00:00
+  Identity: example.com
+www.example.com
+
+  Issuer: C=US, O=DigiCert Inc, OU=www.digicert.com, CN=DigiCert SHA2 High Assurance Server CA
+  Common Name: www.example.org
+  Not Before: 2014-11-06T00:00:00
+  Not After: 2015-11-13T12:00:00
+  Identity: example.com
+www.example.com
+
+  Issuer: Issuer Not Found
+  Common Name: example.com
+  Not Before: 2023-01-27T01:21:18
+  Not After: 2033-01-24T01:21:18
+  Identity: example.com
+user@example.com
+
+  Issuer: C=GB, ST=Cymru, O=AS207960 Cyfyngedig, OU=AS207960 Department of Random Numbers, CN=AS207960 Test CA
+  Common Name: AS207960 Test Intermediate - example.com
+  Not Before: 2021-08-31T15:55:23
+  Not After: 2031-08-29T15:55:23
+  Identity: AS207960 Test Intermediate - example.com
