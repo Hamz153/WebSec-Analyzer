@@ -40,9 +40,7 @@ os.makedirs(dir_path, exist_ok=True)
 dir_path = r"raw"
 os.makedirs(dir_path, exist_ok=True)
 
-# Global variables and constants
-c = datetime.now()
-print(f"Starting time is {c}")
+# Global constants
 wordlist_sub_default = "wordlist/sub.txt"
 wordlist_file_default = "wordlist/files.txt"
 wordlist_dic_default = "wordlist/dic.txt"
@@ -499,7 +497,7 @@ def whois_lookup(domain_to_check):
     try:
         w = whois.whois(domain_to_check)
         if w and w.text:
-            whois_data = f"\n--- WHOIS Data for {domain_to_check} (Timestamp: {c}) ---\n{w.text}"
+            whois_data = f"\n--- WHOIS Data for {domain_to_check} (Timestamp: {datetime.now()}) ---\n{w.text}"
             append_to_file(filename, whois_data)
             append_to_file(file_out, whois_data)
             print(colored(f"    WHOIS data saved to {filename} and {file_out}", "blue"))
@@ -1375,6 +1373,7 @@ def run_scan(target_input, subdomain_wordlist=wordlist_sub_default, directory_wo
              auth_header=None, auto_csrf=False, auto_fields=False):
 
     main_start_time = datetime.now()
+    print(f"Starting time is {main_start_time}")
 
     ascii_banner = pyfiglet.figlet_format("WebSecAnalyzer", font="slant")
     print(colored(ascii_banner, "cyan", attrs=["bold"]))
