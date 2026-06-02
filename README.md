@@ -77,7 +77,20 @@ go install github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest
 
 ### Usage
 
-WebSecAnalyzer operates via a Command-Line Interface (CLI). You can specify a target using a domain, URL, or IP address.
+WebSecAnalyzer can be used via its modern Web Interface or the traditional Command-Line Interface (CLI).
+
+#### 1. Web Interface (Recommended)
+
+To start the web dashboard and run scans from your browser:
+
+```bash
+python3 app.py
+```
+Then navigate to `http://localhost:5000` in your web browser.
+
+#### 2. Command-Line Interface (CLI)
+
+You can specify a target using a domain, URL, or IP address.
 
 #### Basic Scan
 

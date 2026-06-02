@@ -10,3 +10,4 @@ termcolor
 tabulate
 urllib3
 tqdm
+Flask

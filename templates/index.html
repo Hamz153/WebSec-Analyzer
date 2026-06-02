@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSecAnalyzer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .console {
+            background-color: #212529;
+            color: #0dfd0d;
+            font-family: 'Courier New', Courier, monospace;
+            height: 400px;
+            overflow-y: scroll;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+        .card { margin-bottom: 20px; }
+        .nav-tabs { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">WebSecAnalyzer</span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">Scan Configuration</div>
+                    <div class="card-body">
+                        <form id="scanForm">
+                            <div class="mb-3">
+                                <label for="target" class="form-label">Target (Domain/URL/IP)</label>
+                                <input type="text" class="form-control" id="target" placeholder="example.com" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="threads" class="form-label">Threads</label>
+                                <input type="number" class="form-control" id="threads" value="20">
+                            </div>
+
+                            <hr>
+                            <h6>Authentication (Optional)</h6>
+                            <div class="mb-3">
+                                <input type="text" class="form-control mb-2" id="username" placeholder="Username">
+                                <input type="password" class="form-control mb-2" id="password" placeholder="Password">
+                                <input type="text" class="form-control mb-2" id="login_url" placeholder="Login URL">
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="auto_csrf">
+                                <label class="form-check-label" for="auto_csrf">Auto CSRF</label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="auto_fields">
+                                <label class="form-check-label" for="auto_fields">Auto Fields</label>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100" id="startBtn">Start Scan</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="console-tab" data-bs-toggle="tab" data-bs-target="#console-pane" type="button">Live Console</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports-pane" type="button" onclick="loadReports()">Reports</button>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="console-pane">
+                        <div id="console" class="console">Ready to scan...</div>
+                        <div class="mt-2 text-end">
+                            <button class="btn btn-sm btn-secondary" onclick="clearConsole()">Clear Console</button>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="reports-pane">
+                        <div class="list-group" id="reportList">
+                            <!-- Reports will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const consoleDiv = document.getElementById('console');
+        let eventSource = null;
+
+        document.getElementById('scanForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('startBtn');
+            btn.disabled = true;
+            btn.innerText = 'Scanning...';
+
+            clearConsole();
+            appendLog('--- Initializing Scan ---');
+
+            const data = {
+                target: document.getElementById('target').value,
+                threads: document.getElementById('threads').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                login_url: document.getElementById('login_url').value,
+                auto_csrf: document.getElementById('auto_csrf').checked,
+                auto_fields: document.getElementById('auto_fields').checked
+            };
+
+            try {
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const resData = await response.json();
+                    startLogStream(resData.scan_id);
+                } else {
+                    const err = await response.json();
+                    appendLog('ERROR: ' + err.error);
+                    btn.disabled = false;
+                    btn.innerText = 'Start Scan';
+                }
+            } catch (err) {
+                appendLog('ERROR: Could not connect to server.');
+                btn.disabled = false;
+                btn.innerText = 'Start Scan';
+            }
+        };
+
+        function startLogStream(scanId) {
+            if (eventSource) eventSource.close();
+            eventSource = new EventSource(`/logs/${scanId}`);
+            eventSource.onmessage = (e) => {
+                if (e.data === 'SCAN_COMPLETE') {
+                    appendLog('\n--- Scan Finished ---');
+                    eventSource.close();
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('startBtn').innerText = 'Start Scan';
+                    loadReports();
+                } else {
+                    appendLog(e.data);
+                }
+            };
+        }
+
+        function appendLog(text) {
+            consoleDiv.innerText += text + '\n';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function clearConsole() {
+            consoleDiv.innerText = '';
+        }
+
+        async function loadReports() {
+            const list = document.getElementById('reportList');
+            list.innerHTML = '<div class="text-center p-3">Loading reports...</div>';
+
+            try {
+                const response = await fetch('/reports');
+                const reports = await response.json();
+                list.innerHTML = '';
+
+                if (reports.length === 0) {
+                    list.innerHTML = '<div class="list-group-item">No reports found yet.</div>';
+                    return;
+                }
+
+                reports.forEach(file => {
+                    const a = document.createElement('a');
+                    a.href = `/reports/${file}`;
+                    a.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+                    a.target = '_blank';
+                    a.innerHTML = `${file} <span class="badge bg-secondary rounded-pill">Download</span>`;
+                    list.appendChild(a);
+                });
+            } catch (err) {
+                list.innerHTML = '<div class="list-group-item text-danger">Error loading reports.</div>';
+            }
+        }
+    </script>
+</body>
+</html>
